@@ -40,10 +40,16 @@ try:
 except ImportError:
     pass  # python-dotenv não está instalado → sem problema, .env é opcional
 
-import truststore
+import platform
 
-# Redes corporativas: usar certificados do sistema (como o browser)
-truststore.inject_into_ssl()
+# truststore: necessário em redes corporativas Windows com proxy que inspeciona HTTPS.
+# Em Linux (GitHub Actions) não é necessário.
+if platform.system() == "Windows":
+    try:
+        import truststore
+        truststore.inject_into_ssl()
+    except ImportError:
+        pass
 
 from supabase import create_client
 

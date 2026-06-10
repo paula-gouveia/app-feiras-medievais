@@ -52,7 +52,10 @@ BROWSER_HEADERS = {
     "User-Agent": USER_AGENT,
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
     "Accept-Language": "pt-PT,pt;q=0.9,en-US;q=0.8,en;q=0.7",
-    "Accept-Encoding": "gzip, deflate, br",
+    # Sem "br" (Brotli): requests não descomprime Brotli nativamente.
+    # Se enviarmos "br" no Accept-Encoding, o servidor pode responder com Brotli
+    # e nós recebemos bytes crus que o html.parser não consegue interpretar.
+    "Accept-Encoding": "gzip, deflate",
     "DNT": "1",
     "Connection": "keep-alive",
     "Upgrade-Insecure-Requests": "1",

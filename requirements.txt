@@ -2,7 +2,8 @@
 requests==2.32.3
 truststore>=0.10.0
 beautifulsoup4==4.12.3
-lxml==6.1.1
+# lxml removido: incompatibilidade entre lxml>=6 e bs4 4.12.x em HTML com
+# namespaces XML (ValueError em _getNsTag). Usamos html.parser (built-in).
 geopy==2.4.1
 
 # Base de dados (Fase 2)

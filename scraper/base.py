@@ -113,8 +113,11 @@ def get_soup(
         try:
             resp = session.get(url, timeout=30)
             resp.raise_for_status()
-            # lxml é mais rápido que html.parser para documentos grandes
-            return BeautifulSoup(resp.text, "lxml")
+            # html.parser: parser built-in do Python, sem dependências externas.
+            # Porquê não lxml? O lxml >= 5/6 tem incompatibilidade com bs4 4.12.x
+            # ao processar atributos de namespace em HTML WordPress (ValueError ao fazer
+            # unpack de namespace, attr = _getNsTag(attr)). html.parser é mais tolerante.
+            return BeautifulSoup(resp.text, "html.parser")
 
         except requests.HTTPError as e:
             status = e.response.status_code if e.response is not None else 0

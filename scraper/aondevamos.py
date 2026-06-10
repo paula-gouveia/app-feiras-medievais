@@ -245,6 +245,34 @@ def _recolher_links(session: requests.Session) -> list[dict]:
     links = []
     artigos = soup.find_all("article")
 
+    if not artigos:
+        # Diagnóstico: ajuda a perceber o que o servidor retornou quando não há <article>
+        title_tag = soup.find("title")
+        title = title_tag.get_text(strip=True) if title_tag else "N/A"
+        h2_count = len(soup.find_all("h2"))
+        a_count = len(soup.find_all("a", href=True))
+        snippet = " ".join(soup.get_text().split())[:400] if soup else ""
+        logger.warning(
+            "Nenhum <article> encontrado na listagem.\n"
+            "  Título da página : %s\n"
+            "  <h2> encontrados : %d\n"
+            "  <a> encontrados  : %d\n"
+            "  Texto (primeiros 400 chars): %s",
+            title, h2_count, a_count, snippet,
+        )
+        # Fallback: tentar encontrar links de eventos por padrão de URL
+        # (útil se o site mudou a estrutura para divs em vez de articles)
+        candidatos = soup.find_all("a", href=re.compile(r'/feiras-e-mercados/'))
+        if candidatos:
+            logger.info("  → Fallback: encontrados %d links por padrão de URL", len(candidatos))
+            for a in candidatos:
+                href = a["href"].strip()
+                nome = a.get_text(strip=True)
+                if href and nome and len(nome) > 3:
+                    links.append({"nome": nome, "url": href})
+        logger.info("  → %d eventos encontrados na listagem", len(links))
+        return links
+
     for artigo in artigos:
         h2 = artigo.find("h2")
         if not h2:

@@ -6,11 +6,21 @@
 # Também pode ser acionado manualmente em:
 #   GitHub → Actions → "Scraper Semanal" → Run workflow
 #
-# SETUP NECESSÁRIO:
+# O que corre aqui vs. localmente:
+#   AQUI (automático) → apenas feirasmedievais.pt
+#     O aondevamos.pt bloqueia os IP ranges dos runners do GitHub (Errno 101).
+#     Solução: correr `python main.py` + `python db/import.py` localmente
+#     de vez em quando para capturar os dados do aondevamos.
+#
+#   LOCAL (manual)    → os dois scrapers
+#     python main.py         # recolhe de ambos os sites
+#     python db/import.py    # importa para o Supabase
+#
+# SETUP NECESSÁRIO (uma só vez):
 #   No repositório GitHub, vai a Settings → Secrets and variables → Actions
 #   e adiciona os dois secrets:
-#     SUPABASE_URL          → URL do teu projeto (ex: https://xxxx.supabase.co)
-#     SUPABASE_SERVICE_KEY  → Chave service_role (no Supabase: Settings → API)
+#     SUPABASE_URL          → ex: https://xxxxxxxxxxxxxxxxxxxx.supabase.co
+#     SUPABASE_SERVICE_KEY  → chave service_role (no Supabase: Settings → API)
 
 name: Scraper Semanal — Feiras Medievais
 
@@ -21,7 +31,7 @@ on:
 
 jobs:
   scrape-and-import:
-    name: Scraping + Import para Supabase
+    name: Scraping (feirasmedievais) + Import para Supabase
     runs-on: ubuntu-latest
     timeout-minutes: 60     # O scraper com ~900 páginas pode demorar 30-40 min
 
@@ -36,22 +46,39 @@ jobs:
           cache: "pip"
 
       - name: Instalar dependências
-        run: pip install -r requirements.txt supabase python-dotenv
+        run: pip install -r requirements.txt
 
-      - name: Correr scraper
+      - name: Correr scraper (só feirasmedievais.pt)
         run: python main.py
-        # Nota: o scraper não precisa de variáveis de ambiente —
-        # acede apenas a sites públicos e guarda em data/feiras.json
+        env:
+          # Só feirasmedievais: o aondevamos.pt bloqueia os IPs do GitHub Actions.
+          # Para incluir aondevamos, corre main.py localmente sem esta variável.
+          SCRAPER_SOURCES: feirasmedievais
+
+      - name: Verificar secrets do Supabase
+        id: check_secrets
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_KEY" ]; then
+            echo "::warning::Secrets do Supabase não configurados — a saltar import."
+            echo "Para ativar o import automático, vai a:"
+            echo "  Settings → Secrets and variables → Actions"
+            echo "  e adiciona SUPABASE_URL e SUPABASE_SERVICE_KEY."
+            echo "supabase_ok=false" >> $GITHUB_OUTPUT
+          else
+            echo "supabase_ok=true" >> $GITHUB_OUTPUT
+          fi
 
       - name: Importar para Supabase
+        if: steps.check_secrets.outputs.supabase_ok == 'true'
         run: python db/import.py
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
 
       - name: Guardar JSON como artefacto
-        # Guarda o feiras.json de cada run nos artefactos do GitHub
-        # (útil para debug ou para ver como os dados evoluem)
         uses: actions/upload-artifact@v4
         if: always()   # guardar mesmo se o import falhar
         with:
@@ -62,5 +89,5 @@ jobs:
       - name: Notificar em caso de falha
         if: failure()
         run: |
-          echo "::error::O scraper ou o import falhou. Verifica os logs acima."
+          echo "::error::O scraper falhou. Verifica os logs acima."
           echo "Podes fazer um run manual em: Actions → Scraper Semanal → Run workflow"

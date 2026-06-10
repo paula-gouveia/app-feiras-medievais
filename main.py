@@ -2,29 +2,24 @@
 main.py — Runner principal do scraper de Feiras Medievais.
 
 Uso:
-    python main.py
+    python main.py                              # corre todos os scrapers (uso local)
+    SCRAPER_SOURCES=feirasmedievais python main.py  # só feirasmedievais.pt (CI/Actions)
 
-O que faz:
-    1. Corre o scraper de feirasmedievais.pt
-    2. Corre o scraper de aondevamos.pt
-    3. Guarda todos os resultados em data/feiras.json
-    4. Imprime um resumo no terminal
+Contexto de execução:
+    - LOCAL: corre os dois scrapers. O aondevamos.pt funciona a partir da rede
+      doméstica/corporativa mas está bloqueado nos IP ranges do GitHub Actions.
+    - GITHUB ACTIONS: usa SCRAPER_SOURCES=feirasmedievais para saltar o aondevamos.
 
 Ficheiros produzidos:
     data/feiras.json   → todos os dados recolhidos
     logs/scraper.log   → log detalhado da execução
-
-Nota sobre duplicados:
-    O mesmo evento pode aparecer em ambos os sites. Nesta fase (Fase 1),
-    guardamos ambas as versões — têm campos diferentes (feirasmedievais tem
-    coordenadas GPS, aondevamos tem descrição e distrito). Na Fase 2
-    (base de dados Supabase), faremos o merge/deduplicação lá.
 """
 
 from __future__ import annotations
 
 import json
 import logging
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -83,21 +78,42 @@ def main():
 
     todas_as_feiras = []
 
+    # SCRAPER_SOURCES controla quais scrapers correm nesta execução.
+    # Por defeito (vazio) → corre todos. O GitHub Actions define "feirasmedievais"
+    # porque o aondevamos.pt bloqueia os IP ranges dos runners do GitHub.
+    # Uso: SCRAPER_SOURCES=feirasmedievais,aondevamos python main.py
+    sources_raw = os.environ.get("SCRAPER_SOURCES", "").strip()
+    sources = {s.strip().lower() for s in sources_raw.split(",") if s.strip()} or {"feirasmedievais", "aondevamos"}
+
+    if sources != {"feirasmedievais", "aondevamos"}:
+        logger.info("Fontes ativas: %s", ", ".join(sorted(sources)))
+
     # --- Scraper 1: feirasmedievais.pt ---
-    try:
-        feiras_fm = feirasmedievais.run(session)
-        todas_as_feiras.extend(feiras_fm)
-    except Exception as e:
-        logger.exception("Erro inesperado no scraper feirasmedievais.pt: %s", e)
-        feiras_fm = []
+    feiras_fm = []
+    if "feirasmedievais" in sources:
+        try:
+            feiras_fm = feirasmedievais.run(session)
+            todas_as_feiras.extend(feiras_fm)
+        except Exception as e:
+            logger.exception("Erro inesperado no scraper feirasmedievais.pt: %s", e)
+            feiras_fm = []
+    else:
+        logger.info("feirasmedievais.pt: ignorado (não está em SCRAPER_SOURCES).")
 
     # --- Scraper 2: aondevamos.pt ---
-    try:
-        feiras_av = aondevamos.run(session)
-        todas_as_feiras.extend(feiras_av)
-    except Exception as e:
-        logger.exception("Erro inesperado no scraper aondevamos.pt: %s", e)
-        feiras_av = []
+    # Nota: aondevamos.pt está bloqueado nos runners do GitHub Actions (Errno 101).
+    # Para adicionar estes dados, corre `python main.py` localmente e depois
+    # `python db/import.py` para sincronizar com o Supabase.
+    feiras_av = []
+    if "aondevamos" in sources:
+        try:
+            feiras_av = aondevamos.run(session)
+            todas_as_feiras.extend(feiras_av)
+        except Exception as e:
+            logger.exception("Erro inesperado no scraper aondevamos.pt: %s", e)
+            feiras_av = []
+    else:
+        logger.info("aondevamos.pt: ignorado (não está em SCRAPER_SOURCES).")
 
     # --- Filtrar posts sem data ---
     # O feirasmedievais.pt mistura posts de eventos com posts editoriais

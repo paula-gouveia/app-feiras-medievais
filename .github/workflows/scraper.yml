@@ -1,0 +1,66 @@
+# .github/workflows/scraper.yml
+#
+# Corre o scraper automaticamente todos os domingos às 04:00 UTC
+# (05:00 em Lisboa no horário de verão, 04:00 no inverno).
+#
+# Também pode ser acionado manualmente em:
+#   GitHub → Actions → "Scraper Semanal" → Run workflow
+#
+# SETUP NECESSÁRIO:
+#   No repositório GitHub, vai a Settings → Secrets and variables → Actions
+#   e adiciona os dois secrets:
+#     SUPABASE_URL          → URL do teu projeto (ex: https://xxxx.supabase.co)
+#     SUPABASE_SERVICE_KEY  → Chave service_role (no Supabase: Settings → API)
+
+name: Scraper Semanal — Feiras Medievais
+
+on:
+  schedule:
+    - cron: "0 4 * * 0"   # Domingo 04:00 UTC
+  workflow_dispatch:        # Permite trigger manual pela interface do GitHub
+
+jobs:
+  scrape-and-import:
+    name: Scraping + Import para Supabase
+    runs-on: ubuntu-latest
+    timeout-minutes: 60     # O scraper com ~900 páginas pode demorar 30-40 min
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt supabase python-dotenv
+
+      - name: Correr scraper
+        run: python main.py
+        # Nota: o scraper não precisa de variáveis de ambiente —
+        # acede apenas a sites públicos e guarda em data/feiras.json
+
+      - name: Importar para Supabase
+        run: python db/import.py
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+
+      - name: Guardar JSON como artefacto
+        # Guarda o feiras.json de cada run nos artefactos do GitHub
+        # (útil para debug ou para ver como os dados evoluem)
+        uses: actions/upload-artifact@v4
+        if: always()   # guardar mesmo se o import falhar
+        with:
+          name: feiras-json-${{ github.run_id }}
+          path: data/feiras.json
+          retention-days: 30
+
+      - name: Notificar em caso de falha
+        if: failure()
+        run: |
+          echo "::error::O scraper ou o import falhou. Verifica os logs acima."
+          echo "Podes fazer um run manual em: Actions → Scraper Semanal → Run workflow"

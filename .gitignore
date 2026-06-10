@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Dados e logs (não versionar — podem conter muita informação)
+data/feiras.json
+logs/
+
+# Ambiente — NUNCA commitar as chaves
+.env
+*.env
+
+# Editores
+.vscode/
+.idea/
+*.swp

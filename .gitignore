@@ -19,6 +19,9 @@ logs/
 .env
 *.env
 
+# Node / Capacitor
+node_modules/
+
 # Editores
 .vscode/
 .idea/

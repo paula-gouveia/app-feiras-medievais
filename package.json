@@ -1,0 +1,17 @@
+{
+  "name": "feiras-medievais-app",
+  "version": "1.0.0",
+  "description": "Feiras Medievais em Portugal — app móvel Android",
+  "private": true,
+  "scripts": {
+    "sync": "cap sync",
+    "android": "cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/core": "^6.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.0.0"
+  }
+}

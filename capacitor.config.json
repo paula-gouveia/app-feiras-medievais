@@ -1,0 +1,8 @@
+{
+  "appId": "pt.feirasmedievais.app",
+  "appName": "Feiras Medievais",
+  "webDir": "docs",
+  "server": {
+    "androidScheme": "https"
+  }
+}

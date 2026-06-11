@@ -1,0 +1,95 @@
+name: Build Android APK
+
+# Corre quando há changes relevantes para a app no branch main.
+# "Relevantes" = ficheiros da web app, config do Capacitor ou dependências npm.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'package-lock.json'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:   # permite correr manualmente no GitHub
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ----------------------------------------------------------------
+      # 1. Código
+      # ----------------------------------------------------------------
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ----------------------------------------------------------------
+      # 2. Node.js + npm
+      # ----------------------------------------------------------------
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      # ----------------------------------------------------------------
+      # 3. Capacitor — gerar projeto Android e sincronizar web assets
+      #
+      #    android/ está no .gitignore (não tem código nativo próprio),
+      #    por isso é gerado de raiz aqui, tal como se faria localmente
+      #    após um clone limpo do repositório.
+      # ----------------------------------------------------------------
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Sync web assets into Android project
+        run: npx cap sync android
+
+      # ----------------------------------------------------------------
+      # 4. Java — necessário para correr o Gradle
+      # ----------------------------------------------------------------
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'   # faz cache do Gradle para builds subsequentes
+
+      # ----------------------------------------------------------------
+      # 5. Android SDK — aceitar licenças (o SDK já está no runner)
+      # ----------------------------------------------------------------
+      - name: Accept Android SDK licenses
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses \
+            2>/dev/null || true
+
+      # ----------------------------------------------------------------
+      # 6. Build — debug APK (não precisa de keystore)
+      # ----------------------------------------------------------------
+      - name: Build debug APK
+        run: |
+          chmod +x android/gradlew
+          cd android && ./gradlew assembleDebug --no-daemon
+
+      # ----------------------------------------------------------------
+      # 7. Publicar o APK como artifact do workflow
+      #
+      #    Disponível em: Actions → este run → secção "Artifacts"
+      #    Retido durante 30 dias.
+      # ----------------------------------------------------------------
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: feiras-medievais-debug-${{ github.run_number }}
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30

@@ -39,9 +39,6 @@
       padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px));
     }
 
-    /* Previne scroll de fundo quando o sheet esta aberto */
-    body.sheet-aberto { overflow: hidden; }
-
     /* ------------------------------------------------------------------ */
     /* CABECALHO                                                            */
     /* ------------------------------------------------------------------ */
@@ -223,7 +220,6 @@
       transition: transform 0.15s, box-shadow 0.15s;
       display: flex;
       flex-direction: column;
-      cursor: pointer;
     }
 
     .card:hover {
@@ -336,115 +332,6 @@
     .popup-link:hover { color: var(--gold); }
 
     /* ------------------------------------------------------------------ */
-    /* MODAL DE DETALHE (bottom sheet)                                     */
-    /* ------------------------------------------------------------------ */
-    .detalhe-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 2000;
-      opacity: 0; pointer-events: none;
-      transition: opacity 0.25s ease;
-    }
-
-    .detalhe-overlay.aberto {
-      opacity: 1; pointer-events: all;
-    }
-
-    .detalhe-sheet {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      z-index: 2001;
-      background: var(--white);
-      border-radius: 20px 20px 0 0;
-      max-height: 92vh;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      transform: translateY(100%);
-      transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-      padding-bottom: env(safe-area-inset-bottom, 0px);
-    }
-
-    .detalhe-sheet.aberto { transform: translateY(0); }
-
-    .detalhe-handle {
-      width: 40px; height: 4px;
-      background: var(--border);
-      border-radius: 2px;
-      margin: 12px auto 0;
-    }
-
-    .detalhe-img {
-      width: 100%; height: 200px;
-      object-fit: cover; display: block;
-      margin-top: 0.75rem;
-    }
-
-    .detalhe-img-placeholder {
-      width: 100%; height: 160px;
-      background: linear-gradient(135deg, var(--cream-dark) 0%, var(--border) 100%);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 4rem; opacity: 0.5;
-      margin-top: 0.75rem;
-    }
-
-    .detalhe-body {
-      padding: 1.25rem 1.25rem 1.5rem;
-    }
-
-    .detalhe-nome {
-      font-family: 'Cinzel', serif;
-      font-size: 1.15rem; font-weight: 700;
-      color: var(--brown-dark);
-      line-height: 1.3; margin-bottom: 0.75rem;
-    }
-
-    .detalhe-row {
-      display: flex; align-items: flex-start;
-      gap: 0.5rem; margin-bottom: 0.55rem;
-      font-size: 0.875rem; color: var(--text-light);
-      line-height: 1.45;
-    }
-
-    .detalhe-row .di { flex-shrink: 0; font-size: 1rem; }
-
-    .detalhe-divider {
-      border: none;
-      border-top: 1px solid var(--border);
-      margin: 1rem 0;
-    }
-
-    .detalhe-badges {
-      display: flex; flex-wrap: wrap;
-      gap: 0.35rem; margin-bottom: 1.25rem;
-    }
-
-    .detalhe-btn-web {
-      display: flex; align-items: center;
-      justify-content: center; gap: 0.5rem;
-      width: 100%; padding: 0.85rem;
-      background: var(--brown-dark);
-      color: var(--cream);
-      border: none; border-radius: 12px;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.95rem; font-weight: 600;
-      cursor: pointer; text-decoration: none;
-      transition: background 0.15s;
-    }
-
-    .detalhe-btn-web:hover { background: var(--brown-mid); }
-
-    .detalhe-close {
-      position: absolute;
-      top: 1rem; right: 1rem;
-      width: 32px; height: 32px;
-      background: var(--cream-dark);
-      border: none; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1rem; cursor: pointer;
-      color: var(--text-light); line-height: 1; z-index: 1;
-    }
-
-    /* ------------------------------------------------------------------ */
     /* DESKTOP (>=768px)                                                    */
     /* ------------------------------------------------------------------ */
     @media (min-width: 768px) {
@@ -481,17 +368,6 @@
       .filter-btn { flex: none; padding: 0.35rem 0.8rem; }
 
       #mapa { height: calc(100vh - var(--header-h) - 5rem); }
-
-      .detalhe-sheet {
-        left: 50%; right: auto;
-        width: 480px;
-        transform: translateX(-50%) translateY(100%);
-        border-radius: 20px 20px 0 0;
-      }
-
-      .detalhe-sheet.aberto {
-        transform: translateX(-50%) translateY(0);
-      }
     }
   </style>
 </head>
@@ -543,42 +419,6 @@
   </div>
 
 </main>
-
-<!-- MODAL DE DETALHE -->
-<div class="detalhe-overlay" id="detalhe-overlay" onclick="closeDetalhe()"></div>
-
-<div class="detalhe-sheet" id="detalhe-sheet" role="dialog" aria-modal="true" aria-labelledby="detalhe-nome">
-  <div class="detalhe-handle"></div>
-  <button class="detalhe-close" onclick="closeDetalhe()" aria-label="Fechar">&#x2715;</button>
-
-  <img id="detalhe-img" class="detalhe-img" src="" alt="" style="display:none">
-  <div id="detalhe-img-ph" class="detalhe-img-placeholder">&#x1F3F0;</div>
-
-  <div class="detalhe-body">
-    <h2 class="detalhe-nome" id="detalhe-nome"></h2>
-
-    <div class="detalhe-row" id="detalhe-datas">
-      <span class="di">&#x1F4C5;</span><span></span>
-    </div>
-    <div class="detalhe-row" id="detalhe-local">
-      <span class="di">&#x1F4CD;</span><span></span>
-    </div>
-    <div class="detalhe-row" id="detalhe-coords" style="display:none">
-      <span class="di">&#x1F5FA;&#xFE0F;</span><span></span>
-    </div>
-    <div class="detalhe-row" id="detalhe-descricao" style="display:none">
-      <span class="di">&#x1F4DC;</span><span></span>
-    </div>
-
-    <hr class="detalhe-divider">
-
-    <div class="detalhe-badges" id="detalhe-badges"></div>
-
-    <a class="detalhe-btn-web" id="detalhe-btn-web" href="#" target="_blank" rel="noopener noreferrer">
-      &#x1F310; Visitar p&#xE1;gina web
-    </a>
-  </div>
-</div>
 
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav" aria-label="Navegacao">
@@ -749,7 +589,7 @@
     const badgeGps = temCoords ? '<span class="badge badge-gps">&#x1F4CC; GPS</span>' : '';
 
     return `
-      <article class="card" onclick="openDetalhe(${idx})">
+      <article class="card">
         ${imgTag}${placeholder}
         <div class="card-body">
           <h2 class="card-nome">${esc(f.nome)}</h2>
@@ -757,89 +597,11 @@
           <p class="card-location">&#x1F4CD; ${esc(locStr)}</p>
           <div class="card-footer">
             <div class="badges">${badgeFonte}${badgeGps}</div>
-            <span class="card-link">Ver detalhes &#x2192;</span>
+            <a class="card-link" href="${esc(f.fonte_url)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">&#x1F310; Abrir no browser &#x2197;</a>
           </div>
         </div>
       </article>`;
   }
-
-  /* ==================================================================
-     MODAL DE DETALHE
-  ================================================================== */
-  function openDetalhe(idx) {
-    const f = feirasFiltradas[idx];
-    if (!f) return;
-
-    // Imagem
-    const imgEl = document.getElementById('detalhe-img');
-    const phEl  = document.getElementById('detalhe-img-ph');
-    if (f.imagem_url) {
-      imgEl.src = f.imagem_url;
-      imgEl.alt = f.nome;
-      imgEl.style.display = 'block';
-      phEl.style.display  = 'none';
-      imgEl.onerror = () => { imgEl.style.display = 'none'; phEl.style.display = 'flex'; };
-    } else {
-      imgEl.style.display = 'none';
-      phEl.style.display  = 'flex';
-    }
-
-    // Nome
-    document.getElementById('detalhe-nome').textContent = f.nome || '—';
-
-    // Datas
-    document.querySelector('#detalhe-datas span:last-child').textContent =
-      formatPeriodo(f.data_inicio, f.data_fim);
-
-    // Localização
-    const locPartes = [f.localidade, f.municipio, f.distrito].filter(Boolean);
-    document.querySelector('#detalhe-local span:last-child').textContent =
-      locPartes.join(', ') || 'Localização desconhecida';
-
-    // Coordenadas GPS
-    const coordsRow = document.getElementById('detalhe-coords');
-    if (f.lat != null && f.lng != null) {
-      document.querySelector('#detalhe-coords span:last-child').textContent =
-        `${f.lat.toFixed(5)}, ${f.lng.toFixed(5)}`;
-      coordsRow.style.display = 'flex';
-    } else {
-      coordsRow.style.display = 'none';
-    }
-
-    // Descrição
-    const descRow = document.getElementById('detalhe-descricao');
-    if (f.descricao) {
-      document.querySelector('#detalhe-descricao span:last-child').textContent = f.descricao;
-      descRow.style.display = 'flex';
-    } else {
-      descRow.style.display = 'none';
-    }
-
-    // Badges
-    const badgeFonte = f.fonte === 'feirasmedievais'
-      ? '<span class="badge badge-fm">feirasmedievais.pt</span>'
-      : '<span class="badge badge-adv">aondevamos.pt</span>';
-    const badgeGps = (f.lat != null && f.lng != null)
-      ? '<span class="badge badge-gps">&#x1F4CC; GPS</span>' : '';
-    document.getElementById('detalhe-badges').innerHTML = badgeFonte + badgeGps;
-
-    // Botão web
-    document.getElementById('detalhe-btn-web').href = f.fonte_url || '#';
-
-    // Abrir sheet
-    document.getElementById('detalhe-overlay').classList.add('aberto');
-    document.getElementById('detalhe-sheet').classList.add('aberto');
-    document.body.classList.add('sheet-aberto');
-    document.getElementById('detalhe-sheet').scrollTop = 0;
-  }
-
-  function closeDetalhe() {
-    document.getElementById('detalhe-overlay').classList.remove('aberto');
-    document.getElementById('detalhe-sheet').classList.remove('aberto');
-    document.body.classList.remove('sheet-aberto');
-  }
-
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetalhe(); });
 
   /* ==================================================================
      RENDER: MAPA

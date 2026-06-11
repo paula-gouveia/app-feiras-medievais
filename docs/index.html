@@ -5,38 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Feiras Medievais · Portugal</title>
 
-  <!--
-    Fontes:
-    - Cinzel: serifada, regal — usada nos títulos
-    - Inter: sans-serif limpa — usada no corpo de texto
-  -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-
-  <!-- Leaflet CSS (para o mapa) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
   <style>
-    /* ------------------------------------------------------------------ */
-    /* VARIÁVEIS & RESET                                                    */
-    /* ------------------------------------------------------------------ */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --brown-dark:  #3d2b1a;   /* cabeçalho, texto escuro */
-      --brown-mid:   #6b4226;   /* links, acentos */
-      --gold:        #b8860b;   /* datas */
-      --gold-light:  #d4a017;   /* tab ativo, destaque */
-      --cream:       #fdf6e9;   /* fundo geral */
-      --cream-dark:  #f0e6d0;   /* placeholder de imagem, fundo badge */
-      --white:       #ffffff;
-      --gray:        #9e9e9e;   /* placeholders, texto secundário */
-      --text:        #2d2015;   /* texto principal */
-      --text-light:  #6b5c4a;   /* texto secundário */
-      --border:      #e0d0b8;
-      --shadow:      rgba(61, 43, 26, 0.1);
-      --radius:      12px;
-      --header-h:    60px;
+      --brown-dark:   #3d2b1a;
+      --brown-mid:    #6b4226;
+      --gold:         #b8860b;
+      --gold-light:   #d4a017;
+      --cream:        #fdf6e9;
+      --cream-dark:   #f0e6d0;
+      --white:        #ffffff;
+      --gray:         #9e9e9e;
+      --text:         #2d2015;
+      --text-light:   #6b5c4a;
+      --border:       #e0d0b8;
+      --shadow:       rgba(61, 43, 26, 0.1);
+      --radius:       12px;
+      --header-h:     56px;
+      --bottom-nav-h: 60px;
     }
 
     body {
@@ -44,114 +35,105 @@
       background: var(--cream);
       color: var(--text);
       min-height: 100vh;
+      padding-top: var(--header-h);
+      padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px));
     }
 
+    /* Previne scroll de fundo quando o sheet esta aberto */
+    body.sheet-aberto { overflow: hidden; }
+
     /* ------------------------------------------------------------------ */
-    /* CABEÇALHO                                                            */
+    /* CABECALHO                                                            */
     /* ------------------------------------------------------------------ */
     header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
       height: var(--header-h);
       background: var(--brown-dark);
-      color: var(--cream);
-      padding: 0 1.5rem;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      position: sticky;
-      top: 0;
+      padding: 0 1.25rem;
       z-index: 1000;
       box-shadow: 0 2px 8px rgba(0,0,0,0.35);
     }
 
-    .header-title {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .header-title h1 {
+    header h1 {
       font-family: 'Cinzel', serif;
-      font-size: 1.15rem;
+      font-size: 1.05rem;
       font-weight: 600;
       color: var(--gold-light);
       letter-spacing: 0.02em;
-      white-space: nowrap;
     }
 
     /* ------------------------------------------------------------------ */
-    /* NAVEGAÇÃO POR TABS                                                   */
+    /* BOTTOM NAV (mobile)                                                  */
     /* ------------------------------------------------------------------ */
-    .tab-nav {
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px));
+      background: var(--white);
+      border-top: 1px solid var(--border);
       display: flex;
-      gap: 0.2rem;
-      background: rgba(255,255,255,0.08);
-      border-radius: 8px;
-      padding: 3px;
+      z-index: 1000;
+      box-shadow: 0 -2px 8px var(--shadow);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 
-    .tab-btn {
-      background: transparent;
+    .bottom-nav-btn {
+      flex: 1;
       border: none;
-      color: rgba(253,246,233,0.65);
-      padding: 0.35rem 1rem;
-      border-radius: 6px;
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
       cursor: pointer;
+      color: var(--gray);
       font-family: 'Inter', sans-serif;
-      font-size: 0.85rem;
+      font-size: 0.7rem;
       font-weight: 500;
-      transition: background 0.15s, color 0.15s;
-      white-space: nowrap;
+      transition: color 0.15s;
+      padding: 0.5rem;
     }
 
-    .tab-btn.active {
-      background: var(--gold-light);
-      color: var(--brown-dark);
-    }
-
-    .tab-btn:hover:not(.active) {
-      background: rgba(255,255,255,0.12);
-      color: var(--cream);
-    }
+    .bottom-nav-btn.active { color: var(--brown-dark); }
+    .bottom-nav-btn .nav-icon { font-size: 1.35rem; line-height: 1; }
 
     /* ------------------------------------------------------------------ */
-    /* CONTEÚDO PRINCIPAL                                                   */
+    /* CONTEUDO PRINCIPAL                                                   */
     /* ------------------------------------------------------------------ */
     main {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 1.5rem;
+      padding: 1.25rem;
     }
 
     /* ------------------------------------------------------------------ */
-    /* BARRA DE FILTROS                                                     */
+    /* FILTROS                                                              */
     /* ------------------------------------------------------------------ */
     .controls {
       display: flex;
-      gap: 0.75rem;
-      margin-bottom: 1.25rem;
-      flex-wrap: wrap;
-      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 1rem;
+      flex-direction: column;
     }
 
-    /* Caixa de pesquisa */
     .search-wrap {
-      flex: 1;
-      min-width: 220px;
       display: flex;
       align-items: center;
       gap: 0.5rem;
       background: var(--white);
       border: 1.5px solid var(--border);
       border-radius: 8px;
-      padding: 0.45rem 0.75rem;
+      padding: 0.5rem 0.75rem;
     }
 
     .search-wrap input {
-      border: none;
-      outline: none;
+      border: none; outline: none;
       font-family: 'Inter', sans-serif;
-      font-size: 0.875rem;
+      font-size: 0.9rem;
       width: 100%;
       color: var(--text);
       background: transparent;
@@ -159,10 +141,9 @@
 
     .search-wrap input::placeholder { color: var(--gray); }
 
-    /* Botões de filtro temporal */
     .filter-group {
       display: flex;
-      gap: 0.2rem;
+      gap: 0.25rem;
       background: var(--white);
       border: 1.5px solid var(--border);
       border-radius: 8px;
@@ -170,9 +151,10 @@
     }
 
     .filter-btn {
+      flex: 1;
       background: transparent;
       border: none;
-      padding: 0.35rem 0.8rem;
+      padding: 0.4rem 0.5rem;
       border-radius: 6px;
       cursor: pointer;
       font-family: 'Inter', sans-serif;
@@ -180,25 +162,16 @@
       font-weight: 500;
       color: var(--text-light);
       white-space: nowrap;
+      text-align: center;
       transition: background 0.15s, color 0.15s;
     }
 
-    .filter-btn.active {
-      background: var(--brown-dark);
-      color: var(--cream);
-    }
+    .filter-btn.active { background: var(--brown-dark); color: var(--cream); }
 
-    .filter-btn:hover:not(.active) {
-      background: var(--cream-dark);
-    }
-
-    /* ------------------------------------------------------------------ */
-    /* INFO DE RESULTADOS                                                   */
-    /* ------------------------------------------------------------------ */
     .results-info {
       font-size: 0.82rem;
       color: var(--text-light);
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
     }
 
     /* ------------------------------------------------------------------ */
@@ -241,7 +214,6 @@
       gap: 1rem;
     }
 
-    /* ---- Card individual ---- */
     .card {
       background: var(--white);
       border-radius: var(--radius);
@@ -251,6 +223,7 @@
       transition: transform 0.15s, box-shadow 0.15s;
       display: flex;
       flex-direction: column;
+      cursor: pointer;
     }
 
     .card:hover {
@@ -258,79 +231,52 @@
       box-shadow: 0 8px 20px var(--shadow);
     }
 
-    /* Imagem do evento */
     .card-img {
-      width: 100%;
-      height: 130px;
-      object-fit: cover;
-      display: block;
-      background: var(--cream-dark);
+      width: 100%; height: 130px;
+      object-fit: cover; display: block;
     }
 
     .card-img-placeholder {
-      width: 100%;
-      height: 130px;
+      width: 100%; height: 130px;
       background: linear-gradient(135deg, var(--cream-dark) 0%, var(--border) 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2.5rem;
-      color: var(--brown-mid);
-      opacity: 0.6;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.5rem; opacity: 0.6;
     }
 
-    /* Corpo do card */
     .card-body {
-      padding: 1rem;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
+      padding: 1rem; flex: 1;
+      display: flex; flex-direction: column;
     }
 
     .card-nome {
       font-family: 'Cinzel', serif;
-      font-size: 0.9rem;
-      font-weight: 600;
+      font-size: 0.9rem; font-weight: 600;
       color: var(--brown-dark);
-      line-height: 1.35;
-      margin-bottom: 0.5rem;
+      line-height: 1.35; margin-bottom: 0.4rem;
     }
 
     .card-dates {
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: var(--gold);
-      margin-bottom: 0.3rem;
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
+      font-size: 0.78rem; font-weight: 600;
+      color: var(--gold); margin-bottom: 0.25rem;
     }
 
     .card-location {
-      font-size: 0.78rem;
-      color: var(--text-light);
-      margin-bottom: 0.75rem;
-      line-height: 1.4;
+      font-size: 0.78rem; color: var(--text-light);
+      margin-bottom: 0.75rem; line-height: 1.4;
     }
 
-    /* Rodapé do card (badges + link) */
     .card-footer {
-      margin-top: auto;
-      padding-top: 0.75rem;
+      margin-top: auto; padding-top: 0.65rem;
       border-top: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 0.5rem;
+      display: flex; justify-content: space-between;
+      align-items: center; gap: 0.5rem;
     }
 
     .badges { display: flex; gap: 0.3rem; flex-wrap: wrap; }
 
     .badge {
-      font-size: 0.68rem;
-      font-weight: 500;
-      padding: 0.18rem 0.5rem;
-      border-radius: 20px;
+      font-size: 0.68rem; font-weight: 500;
+      padding: 0.18rem 0.5rem; border-radius: 20px;
     }
 
     .badge-fm  { background: #ede9e0; color: #5c4a2a; }
@@ -338,143 +284,259 @@
     .badge-gps { background: #e3f0ff; color: #1a5fb4; }
 
     .card-link {
-      font-size: 0.74rem;
-      color: var(--brown-mid);
-      text-decoration: none;
-      font-weight: 600;
-      white-space: nowrap;
-      transition: color 0.15s;
+      font-size: 0.74rem; color: var(--brown-mid);
+      font-weight: 600; white-space: nowrap;
     }
 
-    .card-link:hover { color: var(--gold); }
-
-    /* Estado vazio */
     .empty-state {
-      grid-column: 1 / -1;
-      text-align: center;
-      padding: 4rem 1rem;
-      color: var(--text-light);
+      grid-column: 1 / -1; text-align: center;
+      padding: 4rem 1rem; color: var(--text-light);
     }
 
     .empty-state .icon { font-size: 3rem; margin-bottom: 0.75rem; }
 
     .empty-state h3 {
-      font-family: 'Cinzel', serif;
-      font-size: 1.1rem;
-      color: var(--brown-dark);
-      margin-bottom: 0.4rem;
+      font-family: 'Cinzel', serif; font-size: 1.1rem;
+      color: var(--brown-dark); margin-bottom: 0.4rem;
     }
 
     /* ------------------------------------------------------------------ */
-    /* VISTA DE MAPA                                                        */
+    /* MAPA                                                                 */
     /* ------------------------------------------------------------------ */
     #map-view { display: none; }
 
     .map-info {
-      font-size: 0.8rem;
-      color: var(--text-light);
-      margin-bottom: 0.75rem;
+      font-size: 0.8rem; color: var(--text-light);
+      margin-bottom: 0.6rem;
     }
 
     #mapa {
-      /*
-        Altura = viewport menos o cabeçalho e o padding.
-        min-height garante que o mapa tem sempre tamanho mínimo útil.
-      */
-      height: calc(100vh - var(--header-h) - 5rem);
-      min-height: 420px;
+      height: calc(
+        100vh
+        - var(--header-h)
+        - var(--bottom-nav-h)
+        - env(safe-area-inset-bottom, 0px)
+        - 2.5rem
+        - 2rem
+      );
+      min-height: 380px;
       border-radius: var(--radius);
       border: 1px solid var(--border);
       box-shadow: 0 2px 8px var(--shadow);
     }
 
-    /* Popup do mapa */
     .popup-nome {
-      font-family: 'Cinzel', serif;
-      font-size: 0.88rem;
-      font-weight: 600;
-      color: var(--brown-dark);
-      margin-bottom: 0.3rem;
-      line-height: 1.3;
+      font-family: 'Cinzel', serif; font-size: 0.88rem;
+      font-weight: 600; color: var(--brown-dark);
+      margin-bottom: 0.3rem; line-height: 1.3;
     }
-
     .popup-dates { font-size: 0.76rem; font-weight: 600; color: var(--gold); margin-bottom: 0.2rem; }
     .popup-loc   { font-size: 0.74rem; color: var(--text-light); margin-bottom: 0.4rem; }
     .popup-link  { font-size: 0.74rem; color: var(--brown-mid); font-weight: 600; text-decoration: none; }
     .popup-link:hover { color: var(--gold); }
 
     /* ------------------------------------------------------------------ */
-    /* RESPONSIVO                                                           */
+    /* MODAL DE DETALHE (bottom sheet)                                     */
     /* ------------------------------------------------------------------ */
-    @media (max-width: 600px) {
-      header { padding: 0 1rem; }
-      .header-title h1 { font-size: 0.95rem; }
-      main { padding: 1rem; }
-      .controls { flex-direction: column; align-items: stretch; }
-      .search-wrap { min-width: unset; }
-      .filter-group { overflow-x: auto; }
-      .filter-btn { padding: 0.35rem 0.6rem; }
+    .detalhe-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .detalhe-overlay.aberto {
+      opacity: 1; pointer-events: all;
+    }
+
+    .detalhe-sheet {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 2001;
+      background: var(--white);
+      border-radius: 20px 20px 0 0;
+      max-height: 92vh;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .detalhe-sheet.aberto { transform: translateY(0); }
+
+    .detalhe-handle {
+      width: 40px; height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 12px auto 0;
+    }
+
+    .detalhe-img {
+      width: 100%; height: 200px;
+      object-fit: cover; display: block;
+      margin-top: 0.75rem;
+    }
+
+    .detalhe-img-placeholder {
+      width: 100%; height: 160px;
+      background: linear-gradient(135deg, var(--cream-dark) 0%, var(--border) 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 4rem; opacity: 0.5;
+      margin-top: 0.75rem;
+    }
+
+    .detalhe-body {
+      padding: 1.25rem 1.25rem 1.5rem;
+    }
+
+    .detalhe-nome {
+      font-family: 'Cinzel', serif;
+      font-size: 1.15rem; font-weight: 700;
+      color: var(--brown-dark);
+      line-height: 1.3; margin-bottom: 0.75rem;
+    }
+
+    .detalhe-row {
+      display: flex; align-items: flex-start;
+      gap: 0.5rem; margin-bottom: 0.55rem;
+      font-size: 0.875rem; color: var(--text-light);
+      line-height: 1.45;
+    }
+
+    .detalhe-row .di { flex-shrink: 0; font-size: 1rem; }
+
+    .detalhe-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 1rem 0;
+    }
+
+    .detalhe-badges {
+      display: flex; flex-wrap: wrap;
+      gap: 0.35rem; margin-bottom: 1.25rem;
+    }
+
+    .detalhe-btn-web {
+      display: flex; align-items: center;
+      justify-content: center; gap: 0.5rem;
+      width: 100%; padding: 0.85rem;
+      background: var(--brown-dark);
+      color: var(--cream);
+      border: none; border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem; font-weight: 600;
+      cursor: pointer; text-decoration: none;
+      transition: background 0.15s;
+    }
+
+    .detalhe-btn-web:hover { background: var(--brown-mid); }
+
+    .detalhe-close {
+      position: absolute;
+      top: 1rem; right: 1rem;
+      width: 32px; height: 32px;
+      background: var(--cream-dark);
+      border: none; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; cursor: pointer;
+      color: var(--text-light); line-height: 1; z-index: 1;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* DESKTOP (>=768px)                                                    */
+    /* ------------------------------------------------------------------ */
+    @media (min-width: 768px) {
+      body { padding-bottom: 0; }
+
+      header { justify-content: space-between; padding: 0 1.5rem; }
+
+      .bottom-nav { display: none; }
+
+      .desktop-tabs {
+        display: flex !important; gap: 0.2rem;
+        background: rgba(255,255,255,0.08);
+        border-radius: 8px; padding: 3px;
+      }
+
+      .desktop-tab-btn {
+        background: transparent; border: none;
+        color: rgba(253,246,233,0.65);
+        padding: 0.35rem 1rem; border-radius: 6px;
+        cursor: pointer; font-family: 'Inter', sans-serif;
+        font-size: 0.85rem; font-weight: 500;
+        white-space: nowrap;
+        transition: background 0.15s, color 0.15s;
+      }
+
+      .desktop-tab-btn.active { background: var(--gold-light); color: var(--brown-dark); }
+      .desktop-tab-btn:hover:not(.active) { background: rgba(255,255,255,0.12); color: var(--cream); }
+
+      main { padding: 1.5rem; }
+
+      .controls { flex-direction: row; align-items: center; }
+      .search-wrap { flex: 1; min-width: 220px; }
+      .filter-group { width: auto; }
+      .filter-btn { flex: none; padding: 0.35rem 0.8rem; }
+
+      #mapa { height: calc(100vh - var(--header-h) - 5rem); }
+
+      .detalhe-sheet {
+        left: 50%; right: auto;
+        width: 480px;
+        transform: translateX(-50%) translateY(100%);
+        border-radius: 20px 20px 0 0;
+      }
+
+      .detalhe-sheet.aberto {
+        transform: translateX(-50%) translateY(0);
+      }
     }
   </style>
 </head>
 
 <body>
 
-<!-- ================================================================== -->
-<!-- CABEÇALHO                                                            -->
-<!-- ================================================================== -->
+<!-- CABECALHO -->
 <header>
-  <div class="header-title">
-    <span>⚔️</span>
-    <h1>Feiras Medievais · Portugal</h1>
-  </div>
-  <nav class="tab-nav" role="tablist">
-    <button class="tab-btn active" role="tab" data-tab="lista"
-            onclick="switchTab('lista')">📋 Lista</button>
-    <button class="tab-btn" role="tab" data-tab="mapa"
-            onclick="switchTab('mapa')">🗺️ Mapa</button>
+  <h1>&#x2694;&#xFE0F; Feiras Medievais &middot; Portugal</h1>
+  <nav class="desktop-tabs" style="display:none" aria-label="Navegacao">
+    <button class="desktop-tab-btn active" data-tab="lista" onclick="switchTab('lista')">&#x1F4CB; Lista</button>
+    <button class="desktop-tab-btn"        data-tab="mapa"  onclick="switchTab('mapa')">&#x1F5FA;&#xFE0F; Mapa</button>
   </nav>
 </header>
 
-<!-- ================================================================== -->
-<!-- CONTEÚDO PRINCIPAL                                                   -->
-<!-- ================================================================== -->
+<!-- CONTEUDO PRINCIPAL -->
 <main>
 
-  <!-- Barra de filtros — partilhada pelas duas vistas -->
-  <div class="controls">
+  <div class="controls" id="controls-bar">
     <div class="search-wrap">
-      <span>🔍</span>
+      <span>&#x1F50D;</span>
       <input type="search" id="search-input" autocomplete="off"
-             placeholder="Pesquisar por nome, localidade, município…"
+             placeholder="Pesquisar por nome, localidade&#x2026;"
              oninput="applyFilters()">
     </div>
-    <div class="filter-group" role="group" aria-label="Filtro temporal">
-      <button class="filter-btn active" data-filter="futuras"
-              onclick="setTimeFilter('futuras')">Próximas</button>
-      <button class="filter-btn" data-filter="30d"
-              onclick="setTimeFilter('30d')">30 dias</button>
-      <button class="filter-btn" data-filter="3m"
-              onclick="setTimeFilter('3m')">3 meses</button>
-      <button class="filter-btn" data-filter="todas"
-              onclick="setTimeFilter('todas')">Todas</button>
+    <div class="filter-group" role="group">
+      <button class="filter-btn active" data-filter="proximas" onclick="setTimeFilter('proximas')">Em curso e pr&#xF3;ximas</button>
+      <button class="filter-btn"        data-filter="30d"      onclick="setTimeFilter('30d')">30 dias</button>
+      <button class="filter-btn"        data-filter="3m"       onclick="setTimeFilter('3m')">3 meses</button>
     </div>
   </div>
 
-  <!-- Banner de erro (oculto por defeito) -->
   <div id="error-banner" class="error-banner" style="display:none"></div>
 
-  <!-- ---- Vista: Lista ---- -->
+  <!-- Vista: Lista -->
   <div id="lista-view">
     <div id="loading" class="loading">
       <div class="spinner"></div>
-      <p>A carregar feiras…</p>
+      <p>A carregar feiras&#x2026;</p>
     </div>
     <p class="results-info" id="results-info" style="display:none"></p>
     <div class="cards-grid" id="cards-container"></div>
   </div>
 
-  <!-- ---- Vista: Mapa ---- -->
+  <!-- Vista: Mapa -->
   <div id="map-view">
     <p class="map-info" id="map-info"></p>
     <div id="mapa"></div>
@@ -482,143 +544,148 @@
 
 </main>
 
-<!-- ================================================================== -->
-<!-- SCRIPTS                                                              -->
-<!-- ================================================================== -->
+<!-- MODAL DE DETALHE -->
+<div class="detalhe-overlay" id="detalhe-overlay" onclick="closeDetalhe()"></div>
 
-<!-- Leaflet (biblioteca de mapas — tiles OpenStreetMap, sem API key) -->
+<div class="detalhe-sheet" id="detalhe-sheet" role="dialog" aria-modal="true" aria-labelledby="detalhe-nome">
+  <div class="detalhe-handle"></div>
+  <button class="detalhe-close" onclick="closeDetalhe()" aria-label="Fechar">&#x2715;</button>
+
+  <img id="detalhe-img" class="detalhe-img" src="" alt="" style="display:none">
+  <div id="detalhe-img-ph" class="detalhe-img-placeholder">&#x1F3F0;</div>
+
+  <div class="detalhe-body">
+    <h2 class="detalhe-nome" id="detalhe-nome"></h2>
+
+    <div class="detalhe-row" id="detalhe-datas">
+      <span class="di">&#x1F4C5;</span><span></span>
+    </div>
+    <div class="detalhe-row" id="detalhe-local">
+      <span class="di">&#x1F4CD;</span><span></span>
+    </div>
+    <div class="detalhe-row" id="detalhe-coords" style="display:none">
+      <span class="di">&#x1F5FA;&#xFE0F;</span><span></span>
+    </div>
+    <div class="detalhe-row" id="detalhe-descricao" style="display:none">
+      <span class="di">&#x1F4DC;</span><span></span>
+    </div>
+
+    <hr class="detalhe-divider">
+
+    <div class="detalhe-badges" id="detalhe-badges"></div>
+
+    <a class="detalhe-btn-web" id="detalhe-btn-web" href="#" target="_blank" rel="noopener noreferrer">
+      &#x1F310; Visitar p&#xE1;gina web
+    </a>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav" aria-label="Navegacao">
+  <button class="bottom-nav-btn active" data-tab="lista" onclick="switchTab('lista')">
+    <span class="nav-icon">&#x1F4CB;</span>
+    <span>Lista</span>
+  </button>
+  <button class="bottom-nav-btn" data-tab="mapa" onclick="switchTab('mapa')">
+    <span class="nav-icon">&#x1F5FA;&#xFE0F;</span>
+    <span>Mapa</span>
+  </button>
+</nav>
+
+<!-- SCRIPTS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<!--
-  config.js — edita este ficheiro com o teu supabaseUrl e supabaseAnonKey.
-  Deve ser carregado antes do script principal.
--->
 <script src="config.js"></script>
 
 <script>
-  /* ================================================================== */
-  /* ESTADO DA APLICAÇÃO                                                  */
-  /* ================================================================== */
-
-  let todasFeiras    = [];   // dados completos do Supabase
-  let feirasFiltradas = [];  // subconjunto após aplicar filtros
+  /* ==================================================================
+     ESTADO
+  ================================================================== */
+  let todasFeiras     = [];
+  let feirasFiltradas = [];
   let currentTab        = 'lista';
-  let currentTimeFilter = 'futuras';
-  let mapa     = null;       // instância Leaflet (criada na 1.ª visita ao mapa)
-  let marcadores = [];       // marcadores Leaflet ativos
+  let currentTimeFilter = 'proximas';
+  let mapa      = null;
+  let marcadores = [];
 
-  /* ================================================================== */
-  /* UTILIDADES DE DATA                                                   */
-  /* ================================================================== */
-
+  /* ==================================================================
+     DATAS
+  ================================================================== */
   const MESES = [
     'janeiro','fevereiro','março','abril','maio','junho',
     'julho','agosto','setembro','outubro','novembro','dezembro'
   ];
 
-  /** Data de hoje em ISO (YYYY-MM-DD). */
   function hoje() {
     return new Date().toISOString().slice(0, 10);
   }
 
-  /** Data daqui a N dias em ISO. */
   function maisNDias(n) {
     const d = new Date();
     d.setDate(d.getDate() + n);
     return d.toISOString().slice(0, 10);
   }
 
-  /** Data daqui a N meses em ISO. */
   function maisNMeses(n) {
     const d = new Date();
     d.setMonth(d.getMonth() + n);
     return d.toISOString().slice(0, 10);
   }
 
-  /** YYYY-MM-DD → "5 junho 2026" */
   function formatData(iso) {
     if (!iso) return '—';
     const [y, m, d] = iso.split('-');
     return `${parseInt(d)} ${MESES[parseInt(m) - 1]} ${y}`;
   }
 
-  /**
-   * Formata um período de forma compacta:
-   *   mesma semana no mesmo mês → "5–8 junho 2026"
-   *   meses diferentes, mesmo ano → "28 junho – 1 julho 2026"
-   *   anos diferentes → "30 dezembro 2026 – 2 janeiro 2027"
-   */
   function formatPeriodo(inicio, fim) {
     if (!inicio) return '—';
     if (!fim || fim === inicio) return formatData(inicio);
-
     const [y1, m1, d1] = inicio.split('-').map(Number);
     const [y2, m2, d2] = fim.split('-').map(Number);
-
-    if (y1 === y2 && m1 === m2) {
-      return `${d1}–${d2} ${MESES[m1 - 1]} ${y1}`;
-    }
-    if (y1 === y2) {
-      return `${d1} ${MESES[m1 - 1]} – ${d2} ${MESES[m2 - 1]} ${y1}`;
-    }
+    if (y1 === y2 && m1 === m2) return `${d1}–${d2} ${MESES[m1-1]} ${y1}`;
+    if (y1 === y2) return `${d1} ${MESES[m1-1]} – ${d2} ${MESES[m2-1]} ${y1}`;
     return `${formatData(inicio)} – ${formatData(fim)}`;
   }
 
-  /* ================================================================== */
-  /* SUPABASE REST API                                                    */
-  /* ================================================================== */
+  function esc(str) {
+    if (str == null) return '';
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
 
-  /**
-   * Vai buscar todas as feiras à tabela `feiras` no Supabase.
-   *
-   * Usamos a REST API diretamente com fetch() — não precisamos do cliente
-   * JavaScript do Supabase, o que poupa uma dependência extra.
-   *
-   * Headers necessários:
-   *   apikey        → identifica o projeto e a chave (obrigatório)
-   *   Authorization → Bearer token para autenticação (RLS usa isto)
-   *
-   * Ordenamos por data_inicio para ter as mais próximas primeiro.
-   * limit=2000 é mais do que suficiente para o dataset atual (~450 registos).
-   */
+  /* ==================================================================
+     SUPABASE
+  ================================================================== */
   async function fetchFeiras() {
     const url = `${CONFIG.supabaseUrl}/rest/v1/feiras`
       + `?select=*&order=data_inicio.asc,nome.asc&limit=2000`;
-
     const resp = await fetch(url, {
       headers: {
         'apikey': CONFIG.supabaseAnonKey,
         'Authorization': `Bearer ${CONFIG.supabaseAnonKey}`,
       }
     });
-
-    if (!resp.ok) {
-      const texto = await resp.text().catch(() => '');
-      throw new Error(`Supabase respondeu com ${resp.status}. ${texto}`);
-    }
-
+    if (!resp.ok) throw new Error(`Supabase respondeu com ${resp.status}`);
     return resp.json();
   }
 
-  /* ================================================================== */
-  /* FILTROS                                                              */
-  /* ================================================================== */
+  /* ==================================================================
+     FILTROS
+  ================================================================== */
+  function estaAtivaOuFutura(f, hj) {
+    const fimEfetivo = f.data_fim || f.data_inicio;
+    return fimEfetivo >= hj;
+  }
 
   function setTimeFilter(filter) {
     currentTimeFilter = filter;
-
-    // Atualiza botões ativos
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.filter === filter);
     });
-
     applyFilters();
   }
 
-  /**
-   * Aplica os filtros ativos (temporal + texto) sobre `todasFeiras`
-   * e atualiza a vista corrente (lista ou mapa).
-   */
   function applyFilters() {
     const pesquisa = document.getElementById('search-input').value.trim().toLowerCase();
     const hj     = hoje();
@@ -626,212 +693,227 @@
     const lim3m  = maisNMeses(3);
 
     feirasFiltradas = todasFeiras.filter(f => {
-      const inicio = f.data_inicio || '';
-
-      // ---- Filtro temporal ----
-      // Sem data → só aparece em "Todas" (as restantes requerem data válida)
-      if (!inicio && currentTimeFilter !== 'todas') return false;
-
-      if (currentTimeFilter === 'futuras') {
-        if (inicio < hj) return false;
-      } else if (currentTimeFilter === '30d') {
-        if (inicio < hj || inicio > lim30d) return false;
-      } else if (currentTimeFilter === '3m') {
-        if (inicio < hj || inicio > lim3m) return false;
-      }
-      // 'todas' → sem filtro temporal
-
-      // ---- Filtro de texto ----
+      if (!estaAtivaOuFutura(f, hj)) return false;
+      if (!f.data_inicio) return false;
+      if (currentTimeFilter === '30d' && f.data_inicio > lim30d) return false;
+      if (currentTimeFilter === '3m'  && f.data_inicio > lim3m)  return false;
       if (pesquisa) {
-        const haystack = [f.nome, f.localidade, f.municipio, f.distrito]
+        const hay = [f.nome, f.localidade, f.municipio, f.distrito]
           .filter(Boolean).join(' ').toLowerCase();
-        if (!haystack.includes(pesquisa)) return false;
+        if (!hay.includes(pesquisa)) return false;
       }
-
       return true;
     });
 
-    // Atualiza a vista que está visível
-    if (currentTab === 'lista') {
-      renderLista();
-    } else {
-      renderMapa();
-    }
+    if (currentTab === 'lista') renderLista();
+    else renderMapa();
   }
 
-  /* ================================================================== */
-  /* RENDER: LISTA DE CARDS                                               */
-  /* ================================================================== */
-
+  /* ==================================================================
+     RENDER: LISTA
+  ================================================================== */
   function renderLista() {
     const container = document.getElementById('cards-container');
     const info      = document.getElementById('results-info');
-
     info.style.display = 'block';
 
     if (feirasFiltradas.length === 0) {
       info.textContent = '';
       container.innerHTML = `
         <div class="empty-state">
-          <div class="icon">🏰</div>
+          <div class="icon">&#x1F3F0;</div>
           <h3>Nenhuma feira encontrada</h3>
           <p>Tenta ajustar os filtros ou a pesquisa.</p>
         </div>`;
       return;
     }
 
-    const label = currentTimeFilter === 'todas' ? 'feiras no total' : 'feiras encontradas';
-    info.textContent = `${feirasFiltradas.length} ${label}`;
-    container.innerHTML = feirasFiltradas.map(cardHTML).join('');
+    info.textContent = `${feirasFiltradas.length} feiras encontradas`;
+    container.innerHTML = feirasFiltradas.map((f, idx) => cardHTML(f, idx)).join('');
   }
 
-  /**
-   * Gera o HTML de um card a partir de um objeto de feira.
-   *
-   * Nota: usamos a função esc() em todos os dados vindos da BD para evitar
-   * injeção de HTML. Nunca inserir dados externos sem escapar!
-   */
-  function cardHTML(f) {
+  function cardHTML(f, idx) {
     const locPartes = [f.localidade, f.municipio, f.distrito].filter(Boolean);
     const locStr    = locPartes.join(', ') || 'Localização desconhecida';
     const temCoords = f.lat != null && f.lng != null;
 
-    // Imagem: tentamos carregar; se falhar (onerror), mostramos o placeholder
     const imgTag = f.imagem_url
       ? `<img class="card-img" src="${esc(f.imagem_url)}" alt="${esc(f.nome)}" loading="lazy"
               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
       : '';
-    const placeholder = `<div class="card-img-placeholder" style="${f.imagem_url ? 'display:none' : ''}">🏰</div>`;
+    const placeholder = `<div class="card-img-placeholder" style="${f.imagem_url ? 'display:none' : ''}">&#x1F3F0;</div>`;
 
     const badgeFonte = f.fonte === 'feirasmedievais'
       ? '<span class="badge badge-fm">feirasmedievais.pt</span>'
       : '<span class="badge badge-adv">aondevamos.pt</span>';
-
-    const badgeGps = temCoords ? '<span class="badge badge-gps">📌 GPS</span>' : '';
+    const badgeGps = temCoords ? '<span class="badge badge-gps">&#x1F4CC; GPS</span>' : '';
 
     return `
-      <article class="card">
+      <article class="card" onclick="openDetalhe(${idx})">
         ${imgTag}${placeholder}
         <div class="card-body">
           <h2 class="card-nome">${esc(f.nome)}</h2>
-          <p class="card-dates">📅 ${formatPeriodo(f.data_inicio, f.data_fim)}</p>
-          <p class="card-location">📍 ${esc(locStr)}</p>
+          <p class="card-dates">&#x1F4C5; ${formatPeriodo(f.data_inicio, f.data_fim)}</p>
+          <p class="card-location">&#x1F4CD; ${esc(locStr)}</p>
           <div class="card-footer">
             <div class="badges">${badgeFonte}${badgeGps}</div>
-            <a class="card-link" href="${esc(f.fonte_url)}" target="_blank" rel="noopener noreferrer">
-              Ver mais →
-            </a>
+            <span class="card-link">Ver detalhes &#x2192;</span>
           </div>
         </div>
       </article>`;
   }
 
-  /** Escapa caracteres HTML para prevenir injeção. */
-  function esc(str) {
-    if (str == null) return '';
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+  /* ==================================================================
+     MODAL DE DETALHE
+  ================================================================== */
+  function openDetalhe(idx) {
+    const f = feirasFiltradas[idx];
+    if (!f) return;
+
+    // Imagem
+    const imgEl = document.getElementById('detalhe-img');
+    const phEl  = document.getElementById('detalhe-img-ph');
+    if (f.imagem_url) {
+      imgEl.src = f.imagem_url;
+      imgEl.alt = f.nome;
+      imgEl.style.display = 'block';
+      phEl.style.display  = 'none';
+      imgEl.onerror = () => { imgEl.style.display = 'none'; phEl.style.display = 'flex'; };
+    } else {
+      imgEl.style.display = 'none';
+      phEl.style.display  = 'flex';
+    }
+
+    // Nome
+    document.getElementById('detalhe-nome').textContent = f.nome || '—';
+
+    // Datas
+    document.querySelector('#detalhe-datas span:last-child').textContent =
+      formatPeriodo(f.data_inicio, f.data_fim);
+
+    // Localização
+    const locPartes = [f.localidade, f.municipio, f.distrito].filter(Boolean);
+    document.querySelector('#detalhe-local span:last-child').textContent =
+      locPartes.join(', ') || 'Localização desconhecida';
+
+    // Coordenadas GPS
+    const coordsRow = document.getElementById('detalhe-coords');
+    if (f.lat != null && f.lng != null) {
+      document.querySelector('#detalhe-coords span:last-child').textContent =
+        `${f.lat.toFixed(5)}, ${f.lng.toFixed(5)}`;
+      coordsRow.style.display = 'flex';
+    } else {
+      coordsRow.style.display = 'none';
+    }
+
+    // Descrição
+    const descRow = document.getElementById('detalhe-descricao');
+    if (f.descricao) {
+      document.querySelector('#detalhe-descricao span:last-child').textContent = f.descricao;
+      descRow.style.display = 'flex';
+    } else {
+      descRow.style.display = 'none';
+    }
+
+    // Badges
+    const badgeFonte = f.fonte === 'feirasmedievais'
+      ? '<span class="badge badge-fm">feirasmedievais.pt</span>'
+      : '<span class="badge badge-adv">aondevamos.pt</span>';
+    const badgeGps = (f.lat != null && f.lng != null)
+      ? '<span class="badge badge-gps">&#x1F4CC; GPS</span>' : '';
+    document.getElementById('detalhe-badges').innerHTML = badgeFonte + badgeGps;
+
+    // Botão web
+    document.getElementById('detalhe-btn-web').href = f.fonte_url || '#';
+
+    // Abrir sheet
+    document.getElementById('detalhe-overlay').classList.add('aberto');
+    document.getElementById('detalhe-sheet').classList.add('aberto');
+    document.body.classList.add('sheet-aberto');
+    document.getElementById('detalhe-sheet').scrollTop = 0;
   }
 
-  /* ================================================================== */
-  /* RENDER: MAPA (LEAFLET)                                               */
-  /* ================================================================== */
+  function closeDetalhe() {
+    document.getElementById('detalhe-overlay').classList.remove('aberto');
+    document.getElementById('detalhe-sheet').classList.remove('aberto');
+    document.body.classList.remove('sheet-aberto');
+  }
 
-  /**
-   * Inicializa o mapa Leaflet uma única vez.
-   *
-   * Tiles: OpenStreetMap (gratuito, sem API key).
-   * Centrado em Portugal continental; zoom 7 mostra o país inteiro.
-   */
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetalhe(); });
+
+  /* ==================================================================
+     RENDER: MAPA
+  ================================================================== */
   function initMapa() {
-    if (mapa) return; // já inicializado — não criar de novo
+    if (mapa) return;
     mapa = L.map('mapa').setView([39.5, -8.0], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       maxZoom: 19,
     }).addTo(mapa);
   }
 
-  /**
-   * Atualiza os marcadores no mapa com as feiras filtradas.
-   * Só feiras com lat/lng são colocadas no mapa.
-   */
   function renderMapa() {
     initMapa();
-
-    // Remover marcadores anteriores
     marcadores.forEach(m => mapa.removeLayer(m));
     marcadores = [];
 
     const comCoords = feirasFiltradas.filter(f => f.lat != null && f.lng != null);
     const semCoords = feirasFiltradas.length - comCoords.length;
 
-    // Atualizar texto informativo
     const infoEl = document.getElementById('map-info');
     if (feirasFiltradas.length === 0) {
       infoEl.textContent = 'Nenhuma feira corresponde aos filtros atuais.';
     } else {
-      const semTxt = semCoords > 0
-        ? ` · ${semCoords} sem coordenadas GPS não aparecem no mapa`
-        : '';
+      const semTxt = semCoords > 0 ? ` · ${semCoords} sem GPS` : '';
       infoEl.textContent = `${comCoords.length} de ${feirasFiltradas.length} feiras com GPS${semTxt}`;
     }
 
-    // Adicionar marcadores
     comCoords.forEach(f => {
       const locPartes = [f.localidade, f.municipio].filter(Boolean).join(', ');
-      const popupHTML = `
+      const popup = `
         <div class="popup-nome">${esc(f.nome)}</div>
-        <div class="popup-dates">📅 ${formatPeriodo(f.data_inicio, f.data_fim)}</div>
-        ${locPartes ? `<div class="popup-loc">📍 ${esc(locPartes)}</div>` : ''}
-        <a class="popup-link" href="${esc(f.fonte_url)}" target="_blank" rel="noopener">Ver mais →</a>
+        <div class="popup-dates">&#x1F4C5; ${formatPeriodo(f.data_inicio, f.data_fim)}</div>
+        ${locPartes ? `<div class="popup-loc">&#x1F4CD; ${esc(locPartes)}</div>` : ''}
+        <a class="popup-link" href="${esc(f.fonte_url)}" target="_blank" rel="noopener">Ver mais &#x2192;</a>
       `;
-      const marcador = L.marker([f.lat, f.lng]).bindPopup(popupHTML);
-      marcador.addTo(mapa);
-      marcadores.push(marcador);
+      const m = L.marker([f.lat, f.lng]).bindPopup(popup);
+      m.addTo(mapa);
+      marcadores.push(m);
     });
 
-    // Ajustar o viewport do mapa para mostrar todos os marcadores
     if (marcadores.length > 0) {
-      const grupo = L.featureGroup(marcadores);
-      mapa.fitBounds(grupo.getBounds().pad(0.15));
+      mapa.fitBounds(L.featureGroup(marcadores).getBounds().pad(0.15));
     }
   }
 
-  /* ================================================================== */
-  /* TROCA DE TABS                                                        */
-  /* ================================================================== */
-
+  /* ==================================================================
+     TROCA DE VISTA
+  ================================================================== */
   function switchTab(tab) {
     currentTab = tab;
 
-    // Atualizar estado dos botões
-    document.querySelectorAll('.tab-btn').forEach(btn => {
+    document.querySelectorAll('.bottom-nav-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    document.querySelectorAll('.desktop-tab-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tab === tab);
     });
 
-    // Mostrar/ocultar vistas
     document.getElementById('lista-view').style.display = tab === 'lista' ? 'block' : 'none';
     document.getElementById('map-view').style.display   = tab === 'mapa'  ? 'block' : 'none';
+    document.getElementById('controls-bar').style.display = tab === 'lista' ? '' : 'none';
+    document.getElementById('results-info').style.display  = tab === 'lista' ? '' : 'none';
 
     if (tab === 'mapa') {
       renderMapa();
-      /*
-        O Leaflet precisa de recalcular o tamanho do container quando este
-        passa de display:none para visível — caso contrário o mapa fica cinzento.
-        O setTimeout com 50ms garante que o browser já fez o reflow antes.
-      */
       setTimeout(() => mapa && mapa.invalidateSize(), 50);
     }
   }
 
-  /* ================================================================== */
-  /* INICIALIZAÇÃO                                                        */
-  /* ================================================================== */
-
+  /* ==================================================================
+     INICIALIZACAO
+  ================================================================== */
   async function init() {
     try {
       todasFeiras = await fetchFeiras();
@@ -842,14 +924,13 @@
       const banner = document.getElementById('error-banner');
       banner.style.display = 'block';
       banner.innerHTML = `
-        <strong>⚠️ Não foi possível carregar os dados.</strong><br>
+        <strong>&#x26A0;&#xFE0F; Não foi possível carregar os dados.</strong><br>
         ${esc(err.message)}<br>
         <small>Verifica se o <code>config.js</code> tem o URL e a chave anon corretos.</small>
       `;
     }
   }
 
-  // Arrancar a aplicação quando a página terminar de carregar
   init();
 </script>
 

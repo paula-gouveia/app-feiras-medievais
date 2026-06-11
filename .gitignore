@@ -22,7 +22,12 @@ logs/
 # Node / Capacitor
 node_modules/
 
-# Editores
+# Projeto Android gerado pelo Capacitor (regenerável com `npx cap add android`)
+# Não contém código nativo personalizado — pode ser recriado a qualquer momento.
+android/
+
+# Ficheiros de IDE
 .vscode/
 .idea/
+*.iml
 *.swp

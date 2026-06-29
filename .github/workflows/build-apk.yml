@@ -1,7 +1,9 @@
 name: Build Android APK
 
-# Corre quando há changes relevantes para a app no branch main.
-# "Relevantes" = ficheiros da web app, config do Capacitor ou dependências npm.
+# Triggers:
+#   1. Push/PR no main com alterações relevantes (código da app, config, deps)
+#   2. Após o scraper semanal terminar com sucesso → APK sempre atualizado
+#   3. Manualmente via GitHub → Actions → Run workflow
 on:
   push:
     branches: [main]
@@ -17,11 +19,19 @@ on:
       - 'capacitor.config.json'
       - 'package.json'
       - 'package-lock.json'
+  workflow_run:
+    workflows: ["Scraper Semanal — Feiras Medievais"]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:   # permite correr manualmente no GitHub
 
 jobs:
   build-apk:
     runs-on: ubuntu-latest
+    # Quando acionado pelo scraper, só avança se ele tiver corrido com sucesso
+    if: >
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
 
     steps:
       # ----------------------------------------------------------------
